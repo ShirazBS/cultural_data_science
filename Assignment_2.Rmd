@@ -1,0 +1,163 @@
+---
+title: "Assignment 2"
+author: "Shiraz Ben Shoshan"
+date: "2024-10-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Part 1 
+
+Load  the 'divorce_margarine'dataset  from  the 'dslabs'package.  Investigate  the  correlation between  margarine  consumption  and  divorce  rates  in  Maine.  Would  an  increase  in  the preference for margarine lead to skyrocketing divorce rates
+
+```{r}
+install.packages("dslabs")
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(dslabs)
+```
+
+load data 
+
+```{r}
+data("divorce_margarine")
+
+head(divorce_margarine)
+```
+
+visualizing the data 
+
+```{r}
+divorce_graph <- divorce_margarine %>%  
+  ggplot(aes(x= divorce_rate_maine, y = margarine_consumption_per_capita)) +
+         geom_point() +
+  geom_smooth(method = lm) +
+         theme_minimal() +
+         labs(x = "Divorce Rate", y = "Margarine Consumption") +
+           ggtitle("Effect of Margarine Consumption on Divorce Rate")
+
+divorce_graph
+```
+checking the correlation
+
+```{r}
+#running pearsons correlation test
+
+cor.test(x = divorce_margarine$divorce_rate_maine, y = divorce_margarine$margarine_consumption_per_capita, method = "pearson")
+```
+the correlation between divorce rates and margarine consumption is very high at 0.99. Below a linear model will also check the correlation to cross referenece the results. 
+
+```{r}
+m1 <- divorce_margarine %>% 
+  lm(divorce_rate_maine ~ margarine_consumption_per_capita, data = .)
+
+summary(m1)
+```
+the results of this linear model along with the correlation test results show that margarine consumption and divorce reate in maine is stringly correlated. The linear model suggets that the baseline for divorce rate 
+
+##Part 2
+
+Load the ‘GSSvocab’dataset from the ‘car’package. This dataset contains people’s scores on an English vocabulary test and includes demographic information.
+
+Filter for the year 1978 and remove rows with missing values (the function na.exclude()is one way to do this–check out the documentation!)
+
+```{r}
+library(car)
+```
+```{r}
+data("GSSvocab")
+
+?na.exclude
+```
+
+```{r}
+GSSvocab_new <- GSSvocab %>% 
+  filter(year == 1978) %>% 
+  na.exclude(vocab)
+  
+GSSvocab_new
+```
+
+Is a person’s  score on the vocabulary test  (‘vocab’)significantly impacted by their level  of education (‘educ’)? Visualize the relationship in aplot and build a model. Briefly explain the results
+
+```{r}
+vocab_plot <- GSSvocab_new %>% 
+  ggplot(aes(x = educ, y = vocab)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  theme_minimal() +
+  labs(x = "Education Level", y = "Vocabulary Score") +
+  ggtitle("Impact of Education Level on Vocabulary Score")
+
+vocab_plot
+```
+
+```{r}
+#building a model
+
+m2 <- GSSvocab_new %>% 
+  lm(vocab ~ educ, data = .)
+
+summary(m2)
+```
+the results of this linear model suggest that the baseline score of the vocab test is 1.24 and with every increase of education level, the subject can expect an increase of 0.39 on their vocabulary test. The results of this model suggest a significant positive linear effect of education on vocabulary scores. While the predictor of education is significant, this model in itself still has a large residual error of 1.885 meaning education will likely not be enough to accurately predict vocabulary scores on a singular level. To address this error, more models incorporating various other predictors will be needed. 
+
+#continuation of part 2
+Whether a person is thenative of an English-speaking country(‘nativeBorn’) could potentially have an impact on the size of their vocabulary. Visualize the relationship and add the predictor to the model. Briefly explain theresults.
+
+```{r}
+native_plot <- GSSvocab_new %>% 
+  ggplot(aes(x = nativeBorn, y = vocab)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(x = "English Native", y = "Vocabulary Score") +
+  ggtitle("Impact of Being a Native English Speaker on Vocabulary Score")
+
+native_plot
+```
+
+```{r}
+GSSvocab_summary <- GSSvocab_new %>% 
+  summary(nativeBorn = count)
+
+GSSvocab_summary
+```
+the visualization shows that there are a lot more native speakers (1388) than non native speakers (89) in the sample. In addition, there is less variance in the scores of the native speakers than non-native speakers. 
+
+```{r}
+m3 <- GSSvocab_new %>% 
+  lm(vocab ~ educ + nativeBorn, data = .)
+
+summary(m3)
+```
+Adding the predictor of being a native english speaker appears to be beneficial as there is a significant effect of being an english native speaker on ones vocabulary score (p < 0.01). In addition, being a native speaker appears to have a larger effect on predicting vocabulary scores as if the subject is a native english speaker, the vocab score is predicted to increase by 0.65. However, there predictor does not appear to have a large effect on minimizing residual error. 
+
+#part2 continued
+
+Does  a  person’s  level  of  education  depend  on  whether they  are  a  native  of  the  country? Visualize the relationship. Do you think it makes sense to add the relationship as an interactionterm? Try creating the model and briefly explain the result
+
+```{r}
+m4 <- GSSvocab_new %>% 
+  lm(vocab ~ educ * nativeBorn, data = .)
+
+summary(m4)
+```
+
+Adding an interaction effect did not appear to benefit the model. By doing so, the results suggest that being a native english speake is no longer significant. In addition, the predictor of the interaction between a higher education level and being a native ensligh speaker appears to create a negative effect of -0.025. 
+
+Which model performs best
+
+```{r}
+anova(m2, m3, m4)
+```
+the anova test shows that model 2 with the addition of native born as a singular predictor is best as it is significantly better than the first model, and has a lower residual score and RSS. While the last model does have a slightly lower residual score and RSS, the predictors themselves were not significant and the model is also not statistically significant from the baseline model in the anova test. Therefore model 2 was chosen as the best model. 
+
+
+
+
+
+
