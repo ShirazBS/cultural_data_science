@@ -24,6 +24,8 @@ library(dslabs)
 load data 
 
 ```{r}
+#loading in the data and checking what it looks like
+
 data("divorce_margarine")
 
 head(divorce_margarine)
@@ -32,6 +34,8 @@ head(divorce_margarine)
 visualizing the data 
 
 ```{r}
+# making a graph looking at the effect of margarine consumption on divorce rate
+
 divorce_graph <- divorce_margarine %>%  
   ggplot(aes(x= divorce_rate_maine, y = margarine_consumption_per_capita)) +
          geom_point() +
@@ -45,19 +49,20 @@ divorce_graph
 checking the correlation
 
 ```{r}
-#running pearsons correlation test
+#running pearsons correlation test to see whether there is an actual correlation between margarine consumption and divorce rate.
 
 cor.test(x = divorce_margarine$divorce_rate_maine, y = divorce_margarine$margarine_consumption_per_capita, method = "pearson")
 ```
-the correlation between divorce rates and margarine consumption is very high at 0.99. Below a linear model will also check the correlation to cross referenece the results. 
+the correlation between divorce rates and margarine consumption is very high at 0.99. Below a linear model will also check the correlation to cross reference the results. 
 
 ```{r}
+# creating a model with margarine as a predictor for divorce rates. 
 m1 <- divorce_margarine %>% 
   lm(divorce_rate_maine ~ margarine_consumption_per_capita, data = .)
 
 summary(m1)
 ```
-the results of this linear model along with the correlation test results show that margarine consumption and divorce reate in maine is stringly correlated. The linear model suggets that the baseline for divorce rate 
+the results of this linear model along with the correlation test results show that margarine consumption and divorce rate in maine is strongly correlated. The linear model suggests that the baseline for divorce rate is 3.3 and with every unit increase of margarine consumption, the divorce rate increases by 0.2. 
 
 ##Part 2
 
@@ -69,12 +74,14 @@ Filter for the year 1978 and remove rows with missing values (the function na.ex
 library(car)
 ```
 ```{r}
+# loading in the data
 data("GSSvocab")
 
 ?na.exclude
 ```
 
 ```{r}
+# creating a new dataframe with just the year 1978 and excluding N.A.s found in the vocab column.
 GSSvocab_new <- GSSvocab %>% 
   filter(year == 1978) %>% 
   na.exclude(vocab)
@@ -85,6 +92,8 @@ GSSvocab_new
 Is a person’s  score on the vocabulary test  (‘vocab’)significantly impacted by their level  of education (‘educ’)? Visualize the relationship in aplot and build a model. Briefly explain the results
 
 ```{r}
+#visualizing the impact of education level on vocab scores.
+
 vocab_plot <- GSSvocab_new %>% 
   ggplot(aes(x = educ, y = vocab)) +
   geom_point() +
@@ -97,7 +106,7 @@ vocab_plot
 ```
 
 ```{r}
-#building a model
+#building a model with education as a predictor.
 
 m2 <- GSSvocab_new %>% 
   lm(vocab ~ educ, data = .)
@@ -107,9 +116,10 @@ summary(m2)
 the results of this linear model suggest that the baseline score of the vocab test is 1.24 and with every increase of education level, the subject can expect an increase of 0.39 on their vocabulary test. The results of this model suggest a significant positive linear effect of education on vocabulary scores. While the predictor of education is significant, this model in itself still has a large residual error of 1.885 meaning education will likely not be enough to accurately predict vocabulary scores on a singular level. To address this error, more models incorporating various other predictors will be needed. 
 
 #continuation of part 2
-Whether a person is thenative of an English-speaking country(‘nativeBorn’) could potentially have an impact on the size of their vocabulary. Visualize the relationship and add the predictor to the model. Briefly explain theresults.
+Whether a person is the native of an English-speaking country (‘nativeBorn’) could potentially have an impact on the size of their vocabulary. Visualize the relationship and add the predictor to the model. Briefly explain the results.
 
 ```{r}
+# visualizing the impact of being a native english speaker on vocabulary scores
 native_plot <- GSSvocab_new %>% 
   ggplot(aes(x = nativeBorn, y = vocab)) +
   geom_boxplot() +
@@ -121,14 +131,16 @@ native_plot
 ```
 
 ```{r}
-GSSvocab_summary <- GSSvocab_new %>% 
-  summary(nativeBorn = count)
+#creating a summary table to see how many participants are native borns to give more understading for the visualization above.
+GSSvocab_summary <- GSSvocab_new %>%
+  count(nativeBorn)
 
 GSSvocab_summary
 ```
 the visualization shows that there are a lot more native speakers (1388) than non native speakers (89) in the sample. In addition, there is less variance in the scores of the native speakers than non-native speakers. 
 
 ```{r}
+#creating a third model with the addition of native born as a predictor. 
 m3 <- GSSvocab_new %>% 
   lm(vocab ~ educ + nativeBorn, data = .)
 
@@ -141,6 +153,7 @@ Adding the predictor of being a native english speaker appears to be beneficial 
 Does  a  person’s  level  of  education  depend  on  whether they  are  a  native  of  the  country? Visualize the relationship. Do you think it makes sense to add the relationship as an interactionterm? Try creating the model and briefly explain the result
 
 ```{r}
+# creating a 4th model with an interaction effect.
 m4 <- GSSvocab_new %>% 
   lm(vocab ~ educ * nativeBorn, data = .)
 
@@ -152,6 +165,7 @@ Adding an interaction effect did not appear to benefit the model. By doing so, t
 Which model performs best
 
 ```{r}
+#running an anove test to compare models.
 anova(m2, m3, m4)
 ```
 the anova test shows that model 2 with the addition of native born as a singular predictor is best as it is significantly better than the first model, and has a lower residual score and RSS. While the last model does have a slightly lower residual score and RSS, the predictors themselves were not significant and the model is also not statistically significant from the baseline model in the anova test. Therefore model 2 was chosen as the best model. 
